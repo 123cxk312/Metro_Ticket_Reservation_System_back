@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.metro.mapper.RefundRequestMapper">
+
+    <sql id="RefundDetailColumns">
+        r.id,
+        r.order_id,
+        o.order_no,
+        r.user_id,
+        u.real_name AS user_name,
+        r.reason,
+        r.status,
+        l.line_name,
+        start_station.station_name AS start_station_name,
+        end_station.station_name AS end_station_name,
+        t.travel_date,
+        t.departure_time,
+        o.total_amount,
+        r.handled_by,
+        handler.real_name AS handled_by_name,
+        r.handled_at,
+        r.handle_remark,
+        r.created_at
+    </sql>
+
+    <sql id="RefundJoins">
+        FROM refund_requests r
+        INNER JOIN ticket_orders o
+            ON o.id = r.order_id
+        INNER JOIN users u
+            ON u.id = r.user_id
+        INNER JOIN tickets t
+            ON t.id = o.ticket_id
+        INNER JOIN metro_lines l
+            ON l.id = t.line_id
+        INNER JOIN stations start_station
+            ON start_station.id = t.start_station_id
+        INNER JOIN stations end_station
+            ON end_station.id = t.end_station_id
+        LEFT JOIN users handler
+            ON handler.id = r.handled_by
+    </sql>
+
+    <select id="findRefundsByUserId" resultType="com.example.metro.dto.refund.RefundDetailItem">
+        SELECT
+        <include refid="RefundDetailColumns"/>
+        <include refid="RefundJoins"/>
+        WHERE r.user_id = #{userId}
+        ORDER BY r.created_at DESC, r.id DESC
+    </select>
+
+    <select id="findRefundsForAdmin" resultType="com.example.metro.dto.refund.RefundDetailItem">
+        SELECT
+        <include refid="RefundDetailColumns"/>
+        <include refid="RefundJoins"/>
+        <where>
+            <if test="status != null">
+                r.status = #{status}
+            </if>
+        </where>
+        ORDER BY r.created_at DESC, r.id DESC
+    </select>
+
+    <select id="findRefundDetail" resultType="com.example.metro.dto.refund.RefundDetailItem">
+        SELECT
+        <include refid="RefundDetailColumns"/>
+        <include refid="RefundJoins"/>
+        WHERE r.id = #{refundId}
+        LIMIT 1
+    </select>
+</mapper>
