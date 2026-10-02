@@ -11,6 +11,7 @@ Spring Boot backend for the metro ticket reservation system.
 - MyBatis-Plus
 - JWT
 - BCrypt
+- DeepSeek function calling
 - MySQL 8
 - Maven
 
@@ -43,6 +44,9 @@ DB_USERNAME
 DB_PASSWORD
 JWT_SECRET
 JWT_EXPIRATION
+DEEPSEEK_API_KEY
+DEEPSEEK_BASE_URL
+DEEPSEEK_MODEL
 ```
 
 Example PowerShell:
@@ -74,6 +78,7 @@ GET http://localhost:8088/api/health
 /api/tickets
 /api/orders
 /api/refunds
+/api/ai/chat
 /api/admin/tickets
 /api/admin/refunds
 ```

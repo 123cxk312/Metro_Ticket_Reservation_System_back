@@ -28,3 +28,8 @@ app:
   jwt:
     secret: ${JWT_SECRET:metro-ticket-reservation-system-development-secret-key-change-me}
     expiration: ${JWT_EXPIRATION:86400000}
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+    base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    model: ${DEEPSEEK_MODEL:deepseek-chat}
+    max-tool-rounds: ${DEEPSEEK_MAX_TOOL_ROUNDS:4}
