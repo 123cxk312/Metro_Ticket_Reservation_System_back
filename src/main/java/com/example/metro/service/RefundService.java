@@ -26,15 +26,18 @@ public class RefundService {
     private final RefundRequestMapper refundRequestMapper;
     private final TicketOrderMapper ticketOrderMapper;
     private final TicketMapper ticketMapper;
+    private final TicketCacheService ticketCacheService;
 
     public RefundService(
             RefundRequestMapper refundRequestMapper,
             TicketOrderMapper ticketOrderMapper,
-            TicketMapper ticketMapper
+            TicketMapper ticketMapper,
+            TicketCacheService ticketCacheService
     ) {
         this.refundRequestMapper = refundRequestMapper;
         this.ticketOrderMapper = ticketOrderMapper;
         this.ticketMapper = ticketMapper;
+        this.ticketCacheService = ticketCacheService;
     }
 
     @Transactional
@@ -139,6 +142,7 @@ public class RefundService {
         }
 
         ticketMapper.increaseStock(order.getTicketId(), order.getQuantity());
+        ticketCacheService.evictTicketSearchesAfterCommit();
         return getRefundDetail(refundId);
     }
 

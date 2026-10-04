@@ -33,17 +33,20 @@ public class AdminTicketService {
     private final StationMapper stationMapper;
     private final LineStationMapper lineStationMapper;
     private final TicketMapper ticketMapper;
+    private final TicketCacheService ticketCacheService;
 
     public AdminTicketService(
             MetroLineMapper metroLineMapper,
             StationMapper stationMapper,
             LineStationMapper lineStationMapper,
-            TicketMapper ticketMapper
+            TicketMapper ticketMapper,
+            TicketCacheService ticketCacheService
     ) {
         this.metroLineMapper = metroLineMapper;
         this.stationMapper = stationMapper;
         this.lineStationMapper = lineStationMapper;
         this.ticketMapper = ticketMapper;
+        this.ticketCacheService = ticketCacheService;
     }
 
     @Transactional
@@ -110,6 +113,7 @@ public class AdminTicketService {
             throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, "车票创建失败");
         }
 
+        ticketCacheService.evictTicketSearchesAfterCommit();
         return createdTicket;
     }
 
@@ -145,6 +149,7 @@ public class AdminTicketService {
             throw new BusinessException(HttpStatus.NOT_FOUND, "车票不存在");
         }
 
+        ticketCacheService.evictTicketSearchesAfterCommit();
         return updatedTicket;
     }
 

@@ -26,10 +26,16 @@ public class OrderService {
 
     private final TicketMapper ticketMapper;
     private final TicketOrderMapper ticketOrderMapper;
+    private final TicketCacheService ticketCacheService;
 
-    public OrderService(TicketMapper ticketMapper, TicketOrderMapper ticketOrderMapper) {
+    public OrderService(
+            TicketMapper ticketMapper,
+            TicketOrderMapper ticketOrderMapper,
+            TicketCacheService ticketCacheService
+    ) {
         this.ticketMapper = ticketMapper;
         this.ticketOrderMapper = ticketOrderMapper;
+        this.ticketCacheService = ticketCacheService;
     }
 
     @Transactional
@@ -76,6 +82,7 @@ public class OrderService {
             throw new BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, "订单创建失败");
         }
 
+        ticketCacheService.evictTicketSearchesAfterCommit();
         return createdOrder;
     }
 

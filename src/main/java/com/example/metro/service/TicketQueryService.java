@@ -24,23 +24,27 @@ public class TicketQueryService {
     private final MetroLineMapper metroLineMapper;
     private final StationMapper stationMapper;
     private final TicketMapper ticketMapper;
+    private final TicketCacheService ticketCacheService;
 
     public TicketQueryService(
             MetroLineMapper metroLineMapper,
             StationMapper stationMapper,
-            TicketMapper ticketMapper
+            TicketMapper ticketMapper,
+            TicketCacheService ticketCacheService
     ) {
         this.metroLineMapper = metroLineMapper;
         this.stationMapper = stationMapper;
         this.ticketMapper = ticketMapper;
+        this.ticketCacheService = ticketCacheService;
     }
 
     @Transactional(readOnly = true)
     public List<LineOptionResponse> listLines() {
-        return metroLineMapper.selectList(
-                        Wrappers.<MetroLine>lambdaQuery()
-                                .eq(MetroLine::getStatus, 1)
-                                .orderByAsc(MetroLine::getLineCode)
+        return ticketCacheService.getLines().orElseGet(() -> {
+            List<LineOptionResponse> lines = metroLineMapper.selectList(
+                            Wrappers.<MetroLine>lambdaQuery()
+                                    .eq(MetroLine::getStatus, 1)
+                                    .orderByAsc(MetroLine::getLineCode)
                 )
                 .stream()
                 .map(line -> new LineOptionResponse(
@@ -50,14 +54,19 @@ public class TicketQueryService {
                         line.getCity()
                 ))
                 .toList();
+
+            ticketCacheService.putLines(lines);
+            return lines;
+        });
     }
 
     @Transactional(readOnly = true)
     public List<StationOptionResponse> listStations() {
-        return stationMapper.selectList(
-                        Wrappers.<Station>lambdaQuery()
-                                .eq(Station::getStatus, 1)
-                                .orderByAsc(Station::getStationCode)
+        return ticketCacheService.getStations().orElseGet(() -> {
+            List<StationOptionResponse> stations = stationMapper.selectList(
+                            Wrappers.<Station>lambdaQuery()
+                                    .eq(Station::getStatus, 1)
+                                    .orderByAsc(Station::getStationCode)
                 )
                 .stream()
                 .map(station -> new StationOptionResponse(
@@ -67,6 +76,10 @@ public class TicketQueryService {
                         station.getCity()
                 ))
                 .toList();
+
+            ticketCacheService.putStations(stations);
+            return stations;
+        });
     }
 
     @Transactional(readOnly = true)
@@ -80,11 +93,28 @@ public class TicketQueryService {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "出发站和到达站不能相同");
         }
 
-        return ticketMapper.searchTickets(
-                startStationId,
-                endStationId,
-                travelDate,
-                direction
-        );
+        return ticketCacheService.getTicketSearch(
+                        startStationId,
+                        endStationId,
+                        travelDate,
+                        direction
+                )
+                .orElseGet(() -> {
+                    List<TicketSearchItem> tickets = ticketMapper.searchTickets(
+                            startStationId,
+                            endStationId,
+                            travelDate,
+                            direction
+                    );
+
+                    ticketCacheService.putTicketSearch(
+                            startStationId,
+                            endStationId,
+                            travelDate,
+                            direction,
+                            tickets
+                    );
+                    return tickets;
+                });
     }
 }
